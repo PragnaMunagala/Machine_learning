@@ -1,0 +1,433 @@
+DROP TABLE IF EXISTS `movie_genres` ;
+
+CREATE TABLE `movie_genres`
+  (`movie_id` INT NOT NULL,
+  `genre` VARCHAR(100) NOT NULL);
+
+LOAD DATA LOCAL INFILE 'D:\\movie_genres.csv' INTO TABLE `movie_genres`
+  FIELDS TERMINATED BY ','
+   OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n'
+  IGNORE 1 lines;
+--------------------------------------------------------------------------------  
+DROP TABLE IF EXISTS `movie_actors` ;
+
+CREATE TABLE `movie_actors`
+  (`movie_id` INT NOT NULL,
+   `actor_id` VARCHAR(100) NOT NULL,
+  `actor_name` VARCHAR(100) NOT NULL,
+  `ranking` INT NOT NULL);
+
+LOAD DATA LOCAL INFILE 'D:\\text.csv' INTO TABLE `movie_actors`
+  FIELDS TERMINATED BY ','
+   OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n'
+  IGNORE 1 lines;
+--------------------------------------------------------------------------------
+  
+DROP TABLE IF EXISTS `movie_directors` ;
+
+CREATE TABLE `movie_directors`
+  (`movie_id` INT NOT NULL,
+  `director_id` VARCHAR(100) NOT NULL,
+  `director_name` VARCHAR(100) NOT NULL);
+
+LOAD DATA LOCAL INFILE 'D:\\movie_directors.csv' INTO TABLE `movie_directors`
+  FIELDS TERMINATED BY ','
+   OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n'
+  IGNORE 1 lines;
+--------------------------------------------------------------------------------
+  
+DROP TABLE IF EXISTS `movie_ratings` ;
+
+CREATE TABLE `movie_ratings`
+  (`movie_id` INT NOT NULL,
+  `rating` VARCHAR(3) NOT NULL);
+
+LOAD DATA LOCAL INFILE 'D:\\movie_ratings.csv' INTO TABLE `movie_ratings`
+  FIELDS TERMINATED BY '\t'
+   OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n'
+  IGNORE 1 lines;
+--------------------------------------------------------------------------------
+
+SELECT actor_id, 
+		MAX(CASE WHEN t.genre = 'Action' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Action,
+        MAX(CASE WHEN t.genre = 'Adventure' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Adventure,
+		MAX(CASE WHEN t.genre = 'Animation' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Animation,
+        MAX(CASE WHEN t.genre = 'Children' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Children,
+		MAX(CASE WHEN t.genre = 'Comedy' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Comedy,
+        MAX(CASE WHEN t.genre = 'Crime' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Crime,
+		MAX(CASE WHEN t.genre = 'Documentary' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Documentary,
+        MAX(CASE WHEN t.genre = 'Drama' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Drama,
+		MAX(CASE WHEN t.genre = 'Fantasy' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Fantasy,
+        MAX(CASE WHEN t.genre = 'Film-Noir' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Film_Noir,
+		MAX(CASE WHEN t.genre = 'Horror' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Horror,
+        MAX(CASE WHEN t.genre = 'IMAX' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Imax,
+		MAX(CASE WHEN t.genre = 'Musical' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Musical,
+        MAX(CASE WHEN t.genre = 'Mystery' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Mystery,
+		MAX(CASE WHEN t.genre = 'Romance' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Romance,
+        MAX(CASE WHEN t.genre = 'Sci-Fi' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Sci_Fi,
+		MAX(CASE WHEN t.genre = 'Short' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Short,
+        MAX(CASE WHEN t.genre = 'Thriller' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Thriller,
+		MAX(CASE WHEN t.genre = 'War' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS War,
+        MAX(CASE WHEN t.genre = 'Western' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Western        
+FROM
+(SELECT aaa.actor_id, 
+	   aaa.genre AS genre, 
+       #count(aaa.genre), 
+       AVG(aaa.rating) AS avg_rating FROM (
+		SELECT act.movie_id AS movie_id, 
+			   act.actor_id AS actor_id, 
+			   gen.genre AS genre, 
+			   ratings.rating  AS rating
+		FROM movie_actors act, movie_genres gen, movie_ratings ratings
+		WHERE act.movie_id = gen.movie_id
+		  AND ratings.movie_id = gen.movie_id) aaa
+		  AND act.movie_id = ratings.movie_id
+GROUP BY actor_id, genre) t
+GROUP BY t.actor_id;
+
+--------------------------------------------------------------------------------
+DROP TABLE IF EXISTS `movie_actors_skill_matrix` ;
+
+CREATE TABLE movie_actors_skill_matrix (ACTOR_ID VARCHAR(100), 
+							ACTOR_NAME VARCHAR(100),
+							ACTION FLOAT(5,2), 
+							ADVENTURE FLOAT(5,2), 
+							ANIMATION FLOAT(5,2), 
+							CHILDREN FLOAT(5,2), 
+							COMEDY FLOAT(5,2), 
+							CRIME FLOAT(5,2), 
+							DOCUMENTARY FLOAT(5,2), 
+							DRAMA FLOAT(5,2), 
+							FANTASY FLOAT(5,2), 
+							FILM_NOIR FLOAT(5,2), 
+							HORROR FLOAT(5,2), 
+							IMAX FLOAT(5,2), 
+							MUSICAL FLOAT(5,2), 
+							MYSTERY FLOAT(5,2), 
+							ROMANCE FLOAT(5,2), 
+							SCI_FI FLOAT(5,2), 
+							SHORT FLOAT(5,2), 
+							THRILLER FLOAT(5,2), 
+							WAR FLOAT(5,2), 
+							WESTERN FLOAT(5,2));
+  
+INSERT INTO movie_actors_skill_matrix 
+SELECT actor_id as person_id, 
+		actor_name,
+		MAX(CASE WHEN t.genre = 'Action' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Action,
+        MAX(CASE WHEN t.genre = 'Adventure' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Adventure,
+		MAX(CASE WHEN t.genre = 'Animation' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Animation,
+        MAX(CASE WHEN t.genre = 'Children' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Children,
+		MAX(CASE WHEN t.genre = 'Comedy' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Comedy,
+        MAX(CASE WHEN t.genre = 'Crime' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Crime,
+		MAX(CASE WHEN t.genre = 'Documentary' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Documentary,
+        MAX(CASE WHEN t.genre = 'Drama' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Drama,
+		MAX(CASE WHEN t.genre = 'Fantasy' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Fantasy,
+        MAX(CASE WHEN t.genre = 'Film-Noir' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Film_Noir,
+		MAX(CASE WHEN t.genre = 'Horror' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Horror,
+        MAX(CASE WHEN t.genre = 'IMAX' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Imax,
+		MAX(CASE WHEN t.genre = 'Musical' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Musical,
+        MAX(CASE WHEN t.genre = 'Mystery' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Mystery,
+		MAX(CASE WHEN t.genre = 'Romance' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Romance,
+        MAX(CASE WHEN t.genre = 'Sci-Fi' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Sci_Fi,
+		MAX(CASE WHEN t.genre = 'Short' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Short,
+        MAX(CASE WHEN t.genre = 'Thriller' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Thriller,
+		MAX(CASE WHEN t.genre = 'War' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS War,
+        MAX(CASE WHEN t.genre = 'Western' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Western        
+FROM
+(SELECT aaa.actor_id, 
+	   aaa.actor_name,
+	   aaa.genre AS genre, 
+       #count(aaa.genre), 
+       AVG(aaa.rating) AS avg_rating FROM (
+		SELECT act.movie_id AS movie_id, 
+			   act.actor_id AS actor_id, 
+               act.actor_name,
+			   gen.genre AS genre, 
+			   ratings.rating  AS rating
+		FROM movie_actors act, movie_genres gen, movie_ratings ratings
+		WHERE act.movie_id = gen.movie_id
+		  AND act.ranking <=5
+		  AND act.movie_id = ratings.movie_id
+		  AND ratings.movie_id = gen.movie_id) aaa
+GROUP BY actor_id, genre) t
+GROUP BY t.actor_id;
+--------------------------------------------------------------------------------
+DROP TABLE IF EXISTS `movie_directors_skill_matrix` ;
+
+CREATE TABLE movie_directors_skill_matrix (DIRECTOR_ID VARCHAR(100), 
+							ACTION FLOAT(5,2), 
+							ADVENTURE FLOAT(5,2), 
+							ANIMATION FLOAT(5,2), 
+							CHILDREN FLOAT(5,2), 
+							COMEDY FLOAT(5,2), 
+							CRIME FLOAT(5,2), 
+							DOCUMENTARY FLOAT(5,2), 
+							DRAMA FLOAT(5,2), 
+							FANTASY FLOAT(5,2), 
+							FILM_NOIR FLOAT(5,2), 
+							HORROR FLOAT(5,2), 
+							IMAX FLOAT(5,2), 
+							MUSICAL FLOAT(5,2), 
+							MYSTERY FLOAT(5,2), 
+							ROMANCE FLOAT(5,2), 
+							SCI_FI FLOAT(5,2), 
+							SHORT FLOAT(5,2), 
+							THRILLER FLOAT(5,2), 
+							WAR FLOAT(5,2), 
+							WESTERN FLOAT(5,2));
+  
+INSERT INTO movie_directors_skill_matrix 
+SELECT director_id as director_id, 
+		director_name as DIRECTOR_NAME, 
+		MAX(CASE WHEN t.genre = 'Action' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Action,
+        MAX(CASE WHEN t.genre = 'Adventure' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Adventure,
+		MAX(CASE WHEN t.genre = 'Animation' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Animation,
+        MAX(CASE WHEN t.genre = 'Children' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Children,
+		MAX(CASE WHEN t.genre = 'Comedy' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Comedy,
+        MAX(CASE WHEN t.genre = 'Crime' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Crime,
+		MAX(CASE WHEN t.genre = 'Documentary' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Documentary,
+        MAX(CASE WHEN t.genre = 'Drama' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Drama,
+		MAX(CASE WHEN t.genre = 'Fantasy' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Fantasy,
+        MAX(CASE WHEN t.genre = 'Film-Noir' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Film_Noir,
+		MAX(CASE WHEN t.genre = 'Horror' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Horror,
+        MAX(CASE WHEN t.genre = 'IMAX' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Imax,
+		MAX(CASE WHEN t.genre = 'Musical' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Musical,
+        MAX(CASE WHEN t.genre = 'Mystery' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Mystery,
+		MAX(CASE WHEN t.genre = 'Romance' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Romance,
+        MAX(CASE WHEN t.genre = 'Sci-Fi' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Sci_Fi,
+		MAX(CASE WHEN t.genre = 'Short' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Short,
+        MAX(CASE WHEN t.genre = 'Thriller' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Thriller,
+		MAX(CASE WHEN t.genre = 'War' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS War,
+        MAX(CASE WHEN t.genre = 'Western' THEN ROUND(t.avg_rating, 2) ELSE NULL END) AS Western        
+FROM
+(SELECT aaa.director_id, 
+		aaa.director_name,
+	   aaa.genre AS genre, 
+       #count(aaa.genre), 
+       AVG(aaa.rating) AS avg_rating FROM (
+		SELECT dir.movie_id AS movie_id, 
+			   dir.director_id AS director_id, 
+			   dir.director_name AS director_name, 
+			   gen.genre AS genre, 
+			   ratings.rating  AS rating
+		FROM movie_directors dir, movie_genres gen, movie_ratings ratings
+		WHERE dir.movie_id = gen.movie_id
+		  AND dir.movie_id = ratings.movie_id
+		  AND ratings.movie_id = gen.movie_id) aaa
+GROUP BY director_id, director_name, genre) t
+GROUP BY t.director_id, t.director_name;
+--------------------------------------------------------------------------------
+drop table if exists tmp_actor_cum_score ;
+create table tmp_actor_cum_score as 
+select qry.actor_id, 
+	   qry.actor_name,
+	   qry.sum_score/qry.num_genres  as cum_score from (
+		select actor_id, 
+				ACTOR_NAME,
+				(IFNULL(masm.action,0) + IFNULL(masm.adventure,0) + IFNULL(masm.animation,0) + IFNULL(masm.children,0) + IFNULL(masm.comedy,0) + IFNULL(masm.crime,0) + IFNULL(masm.documentary,0) + IFNULL(masm.drama,0) + IFNULL(masm.fantasy,0) + IFNULL(masm.film_noir,0) + IFNULL(masm.horror,0) + IFNULL(masm.imax,0) + IFNULL(masm.musical,0) + IFNULL(masm.mystery,0) + IFNULL(masm.romance,0) + IFNULL(masm.sci_fi,0) + IFNULL(masm.short,0) + IFNULL(masm.thriller,0) + IFNULL(masm.war,0) + IFNULL(masm.western, 0)) as sum_score, 
+				(masm.action_count + masm.adventure_count + masm.animation_count + masm.children_count + masm.comedy_count + masm.crime_count + masm.documentary_count + masm.drama_count + masm.fantasy_count + masm.film_noir_count + masm.horror_count + masm.imax_count + masm.musical_count + masm.mystery_count + masm.romance_count + masm.sci_fi_count + masm.short_count + masm.thriller_count + masm.war_count + masm.western_count) as num_genres 
+from
+(select  actor_id,
+		actor_name,
+		action,
+		case when action is not null then 1 else 0 end as action_count,
+        adventure,
+		case when adventure is not null then 1 else 0 end as adventure_count,
+        animation, 
+		case when animation is not null then 1 else 0 end as animation_count,
+        children,
+		case when children is not null then 1 else 0 end as children_count,
+        comedy,
+		case when comedy is not null then 1 else 0 end as comedy_count,
+        crime,
+		case when crime is not null then 1 else 0 end as crime_count,
+        documentary,
+		case when documentary is not null then 1 else 0 end as documentary_count,
+        drama,
+		case when drama is not null then 1 else 0 end as drama_count,
+        fantasy,
+		case when fantasy is not null then 1 else 0 end as fantasy_count,
+        film_noir,
+		case when film_noir is not null then 1 else 0 end as film_noir_count,
+        horror,
+		case when horror is not null then 1 else 0 end as horror_count,
+        imax,
+		case when imax is not null then 1 else 0 end as imax_count,
+        musical,
+		case when musical is not null then 1 else 0 end as musical_count,
+        mystery,
+		case when mystery is not null then 1 else 0 end as mystery_count,
+        romance,
+		case when romance is not null then 1 else 0 end as romance_count,
+        sci_fi,
+		case when sci_fi is not null then 1 else 0 end as sci_fi_count,
+        short,
+		case when short is not null then 1 else 0 end as short_count,
+        thriller,
+		case when thriller is not null then 1 else 0 end as thriller_count,
+        war,
+		case when war is not null then 1 else 0 end as war_count,
+        western,
+		case when western is not null then 1 else 0 end western_count
+from movie_actors_skill_matrix) masm) qry;
+-----------------------------------------------------------------------------------------
+drop table tmp_director_cum_score ;
+	create table tmp_director_cum_score as 
+	select qry.director_id, 
+		   qry.director_name,
+		   qry.sum_score/qry.num_genres  as cum_score from (
+			select director_id, 
+					director_name,
+					(IFNULL(masm.action,0) + IFNULL(masm.adventure,0) + IFNULL(masm.animation,0) + IFNULL(masm.children,0) + IFNULL(masm.comedy,0) + IFNULL(masm.crime,0) + IFNULL(masm.documentary,0) + IFNULL(masm.drama,0) + IFNULL(masm.fantasy,0) + IFNULL(masm.film_noir,0) + IFNULL(masm.horror,0) + IFNULL(masm.imax,0) + IFNULL(masm.musical,0) + IFNULL(masm.mystery,0) + IFNULL(masm.romance,0) + IFNULL(masm.sci_fi,0) + IFNULL(masm.short,0) + IFNULL(masm.thriller,0) + IFNULL(masm.war,0) + IFNULL(masm.western, 0)) as sum_score, 
+					(masm.action_count + masm.adventure_count + masm.animation_count + masm.children_count + masm.comedy_count + masm.crime_count + masm.documentary_count + masm.drama_count + masm.fantasy_count + masm.film_noir_count + masm.horror_count + masm.imax_count + masm.musical_count + masm.mystery_count + masm.romance_count + masm.sci_fi_count + masm.short_count + masm.thriller_count + masm.war_count + masm.western_count) as num_genres 
+	from
+	(select  director_id,
+			director_name,
+			action,
+			case when action is not null then 1 else 0 end as action_count,
+			adventure,
+			case when adventure is not null then 1 else 0 end as adventure_count,
+			animation, 
+			case when animation is not null then 1 else 0 end as animation_count,
+			children,
+			case when children is not null then 1 else 0 end as children_count,
+			comedy,
+			case when comedy is not null then 1 else 0 end as comedy_count,
+			crime,
+			case when crime is not null then 1 else 0 end as crime_count,
+			documentary,
+			case when documentary is not null then 1 else 0 end as documentary_count,
+			drama,
+			case when drama is not null then 1 else 0 end as drama_count,
+			fantasy,
+			case when fantasy is not null then 1 else 0 end as fantasy_count,
+			film_noir,
+			case when film_noir is not null then 1 else 0 end as film_noir_count,
+			horror,
+			case when horror is not null then 1 else 0 end as horror_count,
+			imax,
+			case when imax is not null then 1 else 0 end as imax_count,
+			musical,
+			case when musical is not null then 1 else 0 end as musical_count,
+			mystery,
+			case when mystery is not null then 1 else 0 end as mystery_count,
+			romance,
+			case when romance is not null then 1 else 0 end as romance_count,
+			sci_fi,
+			case when sci_fi is not null then 1 else 0 end as sci_fi_count,
+			short,
+			case when short is not null then 1 else 0 end as short_count,
+			thriller,
+			case when thriller is not null then 1 else 0 end as thriller_count,
+			war,
+			case when war is not null then 1 else 0 end as war_count,
+			western,
+			case when western is not null then 1 else 0 end western_count
+	from movie_directors_skill_matrix) masm) qry;
+-------------------------------------------------------------------------------
+drop table if exists actor_skill_matrix ;
+create table actor_skill_matrix as
+select a.*, b.cum_score from movie_actors_skill_matrix a, tmp_actor_cum_score b where a.ACTOR_ID = b.actor_id;
+
+drop table if exists director_skill_matrix;
+create table director_skill_matrix
+select a.*, b.cum_score from movie_directors_skill_matrix a, tmp_director_cum_score b where a.DIRECTOR_ID = b.DIRECTOR_ID;
+-------------------------------------------------------------------------------
+drop table movie_act_dir_mapping;
+create table movie_act_dir_mapping
+select act.movie_id, concat(act.actors, ',', dir.director_name) as act_dir_list, gen.genres
+from
+(select movie_id, group_concat(actor_name) as actors 
+from movie_actors act
+where ranking <=5
+group by movie_id) act, 
+(select movie_id, group_concat(genre) as genres
+from movie_genres
+group by movie_id) gen,
+(select movie_id, director_name
+from movie_directors) dir
+where act.movie_id = gen.movie_id
+and dir.movie_id = gen.movie_id
+and dir.movie_id = act.movie_id;
+-------------------------------------------------------------------------------
+create table person_similarity_matrix
+select a.ACTOR_ID as actor1, b.ACTOR_ID as actor2, 
+IFNULL((a.action*b.action/100), 0) + 
+IFNULL((a.ADVENTURE*b.ADVENTURE/100), 0) +
+IFNULL((a.ANIMATION*b.ANIMATION/100), 0) +
+IFNULL((a.CHILDREN*b.CHILDREN/100), 0) +
+IFNULL((a.comedy*b.comedy/100), 0) +
+IFNULL((a.CRIME*b.CRIME/100), 0) +
+IFNULL((a.DOCUMENTARY*b.DOCUMENTARY/100), 0) + 
+IFNULL((a.drama*b.drama/100), 0) +
+IFNULL((a.fantasy*b.fantasy/100), 0) +
+IFNULL((a.FILM_NOIR*b.FILM_NOIR/100), 0) + 
+IFNULL((a.HORROR*b.HORROR/100), 0) +
+IFNULL((a.IMAX*b.IMAX/100), 0) +
+IFNULL((a.MUSICAL*b.MUSICAL/100), 0) + 
+IFNULL((a.MYSTERY*b.MYSTERY/100), 0) +
+IFNULL((a.ROMANCE*b.ROMANCE/100), 0) +
+IFNULL((a.SCI_FI*b.SCI_FI/100), 0) +
+IFNULL((a.SHORT*b.SHORT/100), 0) +
+IFNULL((a.THRILLER*b.THRILLER/100), 0) +
+IFNULL((a.WAR*b.WAR/100), 0) + 
+IFNULL((a.WESTERN*b.WESTERN/100), 0) as cosine_distance
+from 
+(select * from actor_skill_matrix
+union 
+select * from director_skill_matrix) a, 
+(select * from actor_skill_matrix
+union 
+select * from director_skill_matrix) b
+where a.ACTOR_ID <> b.ACTOR_ID ;
+-------------------------------------------------------------------------------
+create table movie_act_dir_mapping_final as 
+select a.*, b.rating 
+from movie_act_dir_mapping a, movie_ratings b where a.movie_id = b.movie_id;
+-------------------------------------------------------------------------------
+
+DELIMITER //
+drop procedure if exists proc1;
+create procedure proc1()
+begin
+declare a1, b, c, d int;
+declare r char(255);
+declare cur cursor for select movie_id, ranking, count(*)
+from movie_actors
+group by movie_id, ranking
+having count(*) > 1;
+open cur;
+read_loop: LOOP
+	FETCH cur INTO a1, b, c;
+	
+	select b.movie_id, concat(d.actor_name, ',', b.director_name)
+    into d, r
+    from 
+	(select movie_id, group_concat(actor_name) as actor_name from (
+	select * from movie_actors 
+	where movie_id = a1
+	and ranking <=5
+	limit 5) a) d,
+	movie_directors b
+	where d.movie_id = b.movie_id;
+
+	select concat(d, ' ', r);
+    
+    update movie_act_dir_mapping 
+    set act_dir_list = r
+    where movie_id = d;
+    
+END LOOP;
+COMMIT;
+CLOSE cur;
+SELECT 1 INTO @handler_invoked FROM (SELECT 1) AS t;
+END //
+DELIMITER ;
+
+call proc1;
+-------------------------------------------------------------------------------------
